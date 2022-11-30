@@ -15,14 +15,26 @@ func AuditRegister(rg *gin.RouterGroup) {
 	rg.POST("/list", auditListRoutes()...)
 	rg.POST("/pass", auditPassRoutes()...)
 	rg.POST("/unpass", auditUnPassRoutes()...)
+	rg.POST("/beta", auditBetaRoutes()...)
 }
 
+//Beta签名通过
 func auditListRoutes() []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		middlewareTools.Auth(middleware.TokenAuth),
 		middlewareTools.Permiter(middleware.AdminPermit),
-		ginTools.EasyHandler(check.AuditListCheck,
-			server.AuditListLogic, message.AuditListReq{}),
+		ginTools.EasyHandler(check.AuditBetaCheck,
+			server.AuditListLogic, message.AuditBetaReq{}),
+	}
+}
+
+//证书签名通过
+func auditBetaRoutes() []gin.HandlerFunc {
+	return []gin.HandlerFunc{
+		middlewareTools.Auth(middleware.TokenAuth),
+		middlewareTools.Permiter(middleware.AdminPermit),
+		ginTools.EasyHandler(check.AuditPassCheck,
+			server.AuditPassLogic, message.AuditPassReq{}),
 	}
 }
 

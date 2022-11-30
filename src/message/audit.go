@@ -1,9 +1,10 @@
 package message
 
 import (
+	"simple_ca/src/definition"
+
 	ginTools "github.com/520MianXiangDuiXiang520/ginUtils"
 	"github.com/gin-gonic/gin"
-	"simple_ca/src/definition"
 )
 
 type CRSPublicKey struct {
@@ -16,6 +17,12 @@ type CRSPublicKey struct {
 type AuditListResp struct {
 	Header  ginTools.BaseRespHeader `json:"header"`
 	CRSList []CRSPublicKey          `json:"crs_list"`
+}
+type AuditBetaReq struct {
+}
+
+func (r *AuditBetaReq) JSON(ctx *gin.Context) error {
+	return ctx.ShouldBindJSON(&r)
 }
 
 type AuditListReq struct {
