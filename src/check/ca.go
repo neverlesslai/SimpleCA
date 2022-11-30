@@ -1,0 +1,49 @@
+package check
+
+import (
+	"net/http"
+	"simple_ca/src/tools"
+
+	ginTools "github.com/520MianXiangDuiXiang520/ginUtils"
+	"github.com/gin-gonic/gin"
+)
+
+func checkPublicKey(str string) bool {
+	_, ok := tools.DecodeRSAPublicKey([]byte(str))
+	return ok
+}
+
+func CaUploadPKCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	/* r := req.(*message.CaUploadPKReq)
+	if !checkPublicKey(r.PublicKey) {
+		resp := message.CaCsrResp{
+			Header: ginTools.ParamErrorRespHeader,
+		}
+		return resp, errors.New("")
+	} */
+	return http.StatusOK, nil
+}
+func CaCreatePKCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	return http.StatusOK, nil
+}
+
+func CaCodeSignCsrCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	return http.StatusOK, nil
+}
+
+func CaRevokeCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	return http.StatusOK, nil
+}
+
+func CaFileCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	// request := req.(*message.CaCSRFileReq)
+
+	return http.StatusOK, nil
+}
+
+func CaUpdateCrlCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	return http.StatusOK, nil
+}
+func CaSslCsrCheck(ctx *gin.Context, req ginTools.BaseReqInter) (ginTools.BaseRespInter, error) {
+	return http.StatusOK, nil
+}
