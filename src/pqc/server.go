@@ -1,7 +1,6 @@
 package pqc
 
 import (
-	"crypto/x509/pkix"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -10,9 +9,11 @@ import (
 	"simple_ca/src/definition"
 	"simple_ca/src/message"
 	"simple_ca/src/tools"
+	"simple_ca/src/x509/pkix"
 	"strings"
 	"time"
 
+	email_tools "github.com/520MianXiangDuiXiang520/GoTools/email"
 	ginTools "github.com/520MianXiangDuiXiang520/ginUtils"
 	"github.com/gin-gonic/gin"
 )

@@ -19,23 +19,23 @@ func AuditRegister(rg *gin.RouterGroup) {
 	rg.POST("/beta", auditBetaRoutes()...)
 }
 
-//Beta签名通过
+//审核列表
 func auditListRoutes() []gin.HandlerFunc {
+	return []gin.HandlerFunc{
+		middlewareTools.Auth(middleware.TokenAuth),
+		middlewareTools.Permiter(middleware.AdminPermit),
+		ginTools.EasyHandler(check.AuditListCheck,
+			server.AuditListLogic, message.AuditListReq{}),
+	}
+}
+
+//Beta签名通过
+func auditBetaRoutes() []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		middlewareTools.Auth(middleware.TokenAuth),
 		middlewareTools.Permiter(middleware.AdminPermit),
 		ginTools.EasyHandler(check.AuditBetaCheck,
 			pqc.AuditBetaLogic, message.AuditBetaReq{}),
-	}
-}
-
-//证书签名通过
-func auditBetaRoutes() []gin.HandlerFunc {
-	return []gin.HandlerFunc{
-		middlewareTools.Auth(middleware.TokenAuth),
-		middlewareTools.Permiter(middleware.AdminPermit),
-		ginTools.EasyHandler(check.AuditPassCheck,
-			server.AuditPassLogic, message.AuditPassReq{}),
 	}
 }
 
