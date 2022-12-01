@@ -4,6 +4,7 @@ import (
 	"simple_ca/src/check"
 	"simple_ca/src/message"
 	"simple_ca/src/middleware"
+	"simple_ca/src/pqc"
 	"simple_ca/src/server"
 
 	ginTools "github.com/520MianXiangDuiXiang520/ginUtils"
@@ -24,7 +25,7 @@ func auditListRoutes() []gin.HandlerFunc {
 		middlewareTools.Auth(middleware.TokenAuth),
 		middlewareTools.Permiter(middleware.AdminPermit),
 		ginTools.EasyHandler(check.AuditBetaCheck,
-			server.AuditListLogic, message.AuditBetaReq{}),
+			pqc.AuditBetaLogic, message.AuditBetaReq{}),
 	}
 }
 
