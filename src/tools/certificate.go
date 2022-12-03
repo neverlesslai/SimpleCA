@@ -13,7 +13,32 @@ import (
 	"simple_ca/src/x509"
 	"simple_ca/src/x509/pkix"
 	"time"
+
+	"github.com/pkg/errors"
 )
+
+//test
+func DecodePemCertt(filepath string) (certBody *x509.Certificate, err error) {
+	pemTmp, err := os.ReadFile(filepath)
+	if err != nil {
+		err = errors.Wrap(err, filepath)
+		return
+	}
+
+	certBlock, _ := pem.Decode(pemTmp)
+	if certBlock == nil {
+		err = errors.Wrap(err, "pem decode fail")
+		return
+	}
+	// 证书解析
+	certBody, err = x509.ParseCertificate(certBlock.Bytes)
+	if err != nil {
+		err = errors.Wrap(err, "fail to parse cert")
+		return
+	}
+
+	return
+}
 
 func DecodePemCert(p string) (*x509.Certificate, bool) {
 	_, currently, _, _ := runtime.Caller(1)

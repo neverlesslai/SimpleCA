@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"runtime"
 	"simple_ca/src/definition"
@@ -121,7 +120,7 @@ var CARootPrivateKey = &rsa.PrivateKey{}
 func loadCAKey() (rootRCer *x509.Certificate, rootRPK *rsa.PrivateKey) {
 	// 获取私钥
 	pkName := GetSetting().Secret.CARootPrivateKeyName
-	_, err := os.Stat(pkName)
+	//_, err := os.Stat(pkName)
 	if !tools.HasThisFile(pkName) {
 		// 私钥不存在，创建
 		if !tools.CreateRSAPrivateKeyToFile(pkName, GetSetting().Secret.CARootPrivateKeyLen) {

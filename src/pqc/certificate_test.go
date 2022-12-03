@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package x509 parses X.509-encoded keys and certificates.
-package x509
+package pqc
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"log"
+	"os"
 	"simple_ca/src/x509/pkix"
 
 	//"internal/godebug"
@@ -35,10 +35,40 @@ import (
 	_ "crypto/sha256"
 	_ "crypto/sha512"
 
-	"github.com/open-quantum-safe/liboqs-go/oqs"
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
 )
+
+//x509其它包内容
+type pkcs1PublicKey struct {
+	N *big.Int
+	E int
+}
+
+func Get(key string) string {
+	return get(os.Getenv("GODEBUG"), key)
+}
+
+// get returns the value part of key=value in s (a GODEBUG value).
+func get(s, key string) string {
+	for i := 0; i < len(s)-len(key)-1; i++ {
+		if i > 0 && s[i-1] != ',' {
+			continue
+		}
+		afterKey := s[i+len(key):]
+		if afterKey[0] != '=' || s[i:i+len(key)] != key {
+			continue
+		}
+		val := afterKey[1:]
+		for i, b := range val {
+			if b == ',' {
+				return val[:i]
+			}
+		}
+		return val
+	}
+	return ""
+}
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo
 // in RFC 3280.
@@ -68,7 +98,8 @@ func ParsePKIXPublicKey(derBytes []byte) (pub any, err error) {
 	if algo == UnknownPublicKeyAlgorithm {
 		return nil, errors.New("x509: unknown public key algorithm")
 	}
-	return parsePublicKey(algo, &pki)
+	//return parsePublicKey(algo, &pki)
+	return pub, err
 }
 
 func marshalPublicKey(pub any) (publicKeyBytes []byte, publicKeyAlgorithm pkix.AlgorithmIdentifier, err error) {
@@ -146,7 +177,6 @@ type certificate struct {
 	SignatureValue     asn1.BitString
 }
 
-//RawContent 用于指示需要为结构保留未解码的 DER 数据。 若要使用它，结构的第一个字段必须具有此类型。任何其他字段具有此类型都是错误的。
 type tbsCertificate struct {
 	Raw                asn1.RawContent
 	Version            int `asn1:"optional,explicit,default:0,tag:0"`
@@ -328,7 +358,6 @@ var (
 	// but it's specified by ISO. Microsoft's makecert.exe has been known
 	// to produce certificates with this OID.
 	oidISOSignatureSHA1WithRSA = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 29}
-	oidSignatureDilithium2     = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 2}
 )
 
 var signatureAlgorithmDetails = []struct {
@@ -453,11 +482,10 @@ func getSignatureAlgorithmFromAI(ai pkix.AlgorithmIdentifier) SignatureAlgorithm
 // id-ecPublicKey OBJECT IDENTIFIER ::= {
 //       iso(1) member-body(2) us(840) ansi-X9-62(10045) keyType(2) 1 }
 var (
-	oidPublicKeyRSA        = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
-	oidPublicKeyDSA        = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
-	oidPublicKeyECDSA      = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
-	oidPublicKeyEd25519    = oidSignatureEd25519
-	oidPublicKeyDilithium2 = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+	oidPublicKeyRSA     = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	oidPublicKeyDSA     = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+	oidPublicKeyECDSA   = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
+	oidPublicKeyEd25519 = oidSignatureEd25519
 )
 
 func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm {
@@ -1484,157 +1512,7 @@ var emptyASN1Subject = []byte{0x30, 0}
 // 如果模板中的 SubjectKeyId 为空，并且模板是 CA，则 SubjectKeyId将从公钥的哈希生成。
 //
 //
-//PQC证书签名
-func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []byte) ([]byte, error) {
-	//Signer是可用于签名操作的不透明私钥的接口。例如，保存在硬件模块中的 RSA 密钥。
-	/* key, ok := priv.(crypto.Signer)
-	if !ok {
-		return nil, errors.New("x509: certificate private key does not 实现 crypto.Signer")
-	}
-
-	if template.SerialNumber == nil {
-		return nil, errors.New("x509: no SerialNumber given")
-	}
-
-	if template.BasicConstraintsValid && !template.IsCA && template.MaxPathLen != -1 && (template.MaxPathLen != 0 || template.MaxPathLenZero) {
-		return nil, errors.New("x509: only CAs are allowed to specify MaxPathLen")
-	} */
-	//获取摘要算法和签名算法
-	var signatureAlgorithm = pkix.AlgorithmIdentifier{}
-	signatureAlgorithm.Algorithm = oidSignatureDilithium2
-	signatureAlgorithm.Parameters = asn1.NullRawValue
-	/*/hashFunc, signatureAlgorithm, err := signingParamsForPublicKey(key.Public(), template.SignatureAlgorithm)
-	if err != nil {
-		return nil, err
-	} */
-	//获取公钥字节和公钥算法
-	//publicKeyBytes, publicKeyAlgorithm, err := marshalPublicKey(pub)
-	var publicKeyBytes = pub
-	var publicKeyAlgorithm = pkix.AlgorithmIdentifier{}
-	publicKeyAlgorithm.Algorithm = oidPublicKeyDilithium2
-	/* if err != nil {
-		return nil, err
-	} */
-
-	asn1Issuer, err := subjectBytes(parent)
-	if err != nil {
-		return nil, err
-	}
-
-	asn1Subject, err := subjectBytes(template)
-	if err != nil {
-		return nil, err
-	}
-
-	authorityKeyId := template.AuthorityKeyId
-	if !bytes.Equal(asn1Issuer, asn1Subject) && len(parent.SubjectKeyId) > 0 {
-		authorityKeyId = parent.SubjectKeyId
-	}
-
-	subjectKeyId := template.SubjectKeyId
-	if len(subjectKeyId) == 0 && template.IsCA {
-
-		//   keyIdentifier 由 BIT STRING subjectPublicKey 的值的 160 位 SHA-1 哈希（不包括标签、长度和未使用的位数）组成。
-		h := sha1.Sum(publicKeyBytes)
-		subjectKeyId = h[:]
-	}
-
-	// 检查签名者的公钥是否与私钥匹配（如果可用）。
-	/* type privateKey interface {
-		Equal(crypto.PublicKey) bool
-	}
-	if privPub, ok := key.Public().(privateKey); !ok {
-		return nil, errors.New("x509: internal error: supported public key does not implement Equal")
-	} else if parent.PublicKey != nil && !privPub.Equal(parent.PublicKey) {
-		return nil, errors.New("x509: provided PrivateKey doesn't match parent's PublicKey")
-	} */
-
-	extensions, err := buildCertExtensions(template, bytes.Equal(asn1Subject, emptyASN1Subject), authorityKeyId, subjectKeyId)
-	if err != nil {
-		return nil, err
-	}
-
-	encodedPublicKey := asn1.BitString{BitLength: len(publicKeyBytes) * 8, Bytes: publicKeyBytes}
-	c := tbsCertificate{
-		Version:      2,
-		SerialNumber: template.SerialNumber,
-		//修改一
-		SignatureAlgorithm: signatureAlgorithm,
-		Issuer:             asn1.RawValue{FullBytes: asn1Issuer},
-		Validity:           validity{template.NotBefore.UTC(), template.NotAfter.UTC()},
-		Subject:            asn1.RawValue{FullBytes: asn1Subject},
-		//修改二
-		PublicKey:  publicKeyInfo{nil, publicKeyAlgorithm, encodedPublicKey},
-		Extensions: extensions,
-	}
-	//返回一个ASN.1编码后的字符数组
-	tbsCertContents, err := asn1.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	c.Raw = tbsCertContents
-
-	signed := tbsCertContents
-	/*if hashFunc != 0 {
-		h := hashFunc.New()
-		h.Write(signed)
-		signed = h.Sum(nil)
-	}
-
-	var signerOpts crypto.SignerOpts = hashFunc
-	if template.SignatureAlgorithm != 0 && template.SignatureAlgorithm.isRSAPSS() {
-		signerOpts = &rsa.PSSOptions{
-			SaltLength: rsa.PSSSaltLengthEqualsHash,
-			Hash:       hashFunc,
-		}
-	}
-	//签名
-	var signature []byte
-	signature, err = key.Sign(rand, signed, signerOpts)
-	if err != nil {
-		return nil, err
-	} */
-	//PQC签名---------------------------------------------------------------
-	sigName := "Dilithium5"
-	signer := oqs.Signature{}
-	defer signer.Clean() // clean up even in case of panic
-	if err := signer.Init(sigName, nil); err != nil {
-		log.Fatal(err)
-	}
-	pubkey, err := signer.GenerateKeyPair()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(pubkey)
-	signature, err := signer.Sign(signed)
-	if err != nil {
-		return nil, err
-	}
-	//PQC签名------------------------------------------------------------------
-	signedCert, err := asn1.Marshal(certificate{
-		nil,
-		c,
-		signatureAlgorithm,
-		asn1.BitString{Bytes: signature, BitLength: len(signature) * 8},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Check the signature to ensure the crypto.Signer behaved correctly.
-	//检查签名以确保(加密-签名者)行为正确。
-	/* sigAlg := getSignatureAlgorithmFromAI(signatureAlgorithm)
-	switch sigAlg {
-	case MD5WithRSA:
-		// 如果签名算法仅支持签名，不支持验证，我们将跳过检查。
-	default:
-		if err := checkSignature(sigAlg, c.Raw, signature, key.Public(), true); err != nil {
-			return nil, fmt.Errorf("x509: signature over certificate returned by signer is invalid: %w", err)
-		}
-	} */
-
-	return signedCert, nil
-}
+//1485——1644行为创建证书
 func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv any) ([]byte, error) {
 	//Signer是可用于签名操作的不透明私钥的接口。例如，保存在硬件模块中的 RSA 密钥。
 	key, ok := priv.(crypto.Signer)
@@ -2200,10 +2078,6 @@ func parseCertificateRequest(in *certificateRequest) (*CertificateRequest, error
 	}
 
 	var err error
-	out.PublicKey, err = parsePublicKey(out.PublicKeyAlgorithm, &in.TBSCSR.PublicKey)
-	if err != nil {
-		return nil, err
-	}
 
 	var subject pkix.RDNSequence
 	if rest, err := asn1.Unmarshal(in.TBSCSR.Subject.FullBytes, &subject); err != nil {

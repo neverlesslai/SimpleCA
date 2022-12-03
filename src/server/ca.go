@@ -35,13 +35,17 @@ func CaCreatePKLogic(ctx *gin.Context, req ginTools.BaseReqInter) ginTools.BaseR
 		log.Fatal(err)
 	}
 	pubKey, err := signer.GenerateKeyPair()
+	secKey := signer.ExportSecretKey()
 	if err != nil {
 		log.Fatal(err)
 	}
 	encoded := base64.StdEncoding.EncodeToString(pubKey)
+	encoded1 := base64.StdEncoding.EncodeToString(secKey)
 	s1 := "-----BEGIN PUBLIC KEY-----"
 	s2 := "-----END PUBLIC KEY-----"
 	resp.PublicKey = fmt.Sprintf("%s\n%s\n%s", s1, encoded, s2)
+	//resp.PublicKey = encoded
+	resp.SecretKey = encoded1
 	resp.Header = ginTools.SuccessRespHeader
 	return resp
 

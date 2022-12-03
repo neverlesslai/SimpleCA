@@ -18,7 +18,11 @@ type AuditListResp struct {
 	Header  ginTools.BaseRespHeader `json:"header"`
 	CRSList []CRSPublicKey          `json:"crs_list"`
 }
+type AuditBetaResp struct {
+	Header ginTools.BaseRespHeader `json:"header"`
+}
 type AuditBetaReq struct {
+	CSRID uint `json:"csr_id"`
 }
 
 func (r *AuditBetaReq) JSON(ctx *gin.Context) error {

@@ -20,6 +20,7 @@ type CaRequestResp struct {
 type CaCreatePKResp struct {
 	Header    ginTools.BaseRespHeader `json:"header"`
 	PublicKey string                  `json:"public_key" check:"not null"`
+	SecretKey string                  `json:"secret_key" check:"not null"`
 }
 type CaCreatePKReq struct {
 }

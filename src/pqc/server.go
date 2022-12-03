@@ -1,9 +1,10 @@
 package pqc
 
 import (
-	"fmt"
 	"math/big"
 	"net/http"
+	"os"
+	"path"
 	"simple_ca/src"
 	"simple_ca/src/dao"
 	"simple_ca/src/definition"
@@ -19,8 +20,8 @@ import (
 )
 
 func AuditBetaLogic(ctx *gin.Context, req ginTools.BaseReqInter) ginTools.BaseRespInter {
-	request := req.(*message.AuditPassReq)
-	resp := message.AuditPassResp{}
+	request := req.(*message.AuditBetaReq)
+	resp := message.AuditBetaResp{}
 	// 删除解密步骤(2020/11/29)
 	// csr, ok := checkCSRID(request.CSRID)
 	csr, ok := dao.GetCRSByID(request.CSRID)
@@ -59,13 +60,15 @@ func AuditBetaLogic(ctx *gin.Context, req ginTools.BaseReqInter) ginTools.BaseRe
 		UserID:     csr.UserID,
 		RequestID:  csr.ID,
 	})
-	// 生成证书
+	// 生成证书名字
 	cName := tools.GetCertificateFileName(c.ID, user.ID, user.Username)
-	cerFileName := fmt.Sprintf("%s/%s",
-		src.GetSetting().Secret.UserCerPath, cName)
+	rootPath, _ := os.Getwd()
+	/* cerFileName := fmt.Sprintf("%s/%s",
+	src.GetSetting().Secret.UserCerPath, cName) */
+	cerFileName := path.Join(rootPath, src.GetSetting().Secret.UserCerPath+"/"+cName)
 	// 获取 CA 根证书和私钥
 	rootCer, rootPK := src.GetCARootCer()
-
+	//主体信息
 	subject := pkix.Name{
 		Country:            []string{csr.Country},
 		Province:           []string{csr.Province},
@@ -79,7 +82,7 @@ func AuditBetaLogic(ctx *gin.Context, req ginTools.BaseReqInter) ginTools.BaseRe
 	switch csr.Type {
 	// 签发代码签名证书
 	case definition.CertificateTypeCodeSign:
-		ok = tools.CreateCodeSignCert(&rootCer, big.NewInt(int64(int(c.ID))), subject,
+		ok = CreateCodeSignCert(&rootCer, big.NewInt(int64(int(c.ID))), subject,
 			csr.PublicKey, &rootPK, notBefore, notAfter, crlDP, cerFileName)
 	// 签发 SSL 证书
 	case definition.CertificateTypeSSL:
