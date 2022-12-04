@@ -62,6 +62,7 @@ func DecodePemCert(p string) (*x509.Certificate, bool) {
 	return certBody, true
 }
 
+//生成证书
 func createNewCertificate(rootCer, template *x509.Certificate,
 	publicKey string, pk *rsa.PrivateKey, p string) bool {
 

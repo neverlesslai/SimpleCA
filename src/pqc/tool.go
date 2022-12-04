@@ -15,6 +15,27 @@ import (
 	"time"
 )
 
+//生成SSL签名证书
+func CreateSSLCert(rootCer *x509.Certificate, serialN *big.Int, subject pkix.Name,
+	publicKey string, pk *rsa.PrivateKey, notBefore, notAfter time.Time,
+	CRLDistributionPoint []string, DNSNames []string, p string) bool {
+	template := &x509.Certificate{
+		Version:               1,
+		SerialNumber:          serialN,
+		Subject:               subject,
+		Issuer:                subject,
+		SignatureAlgorithm:    x509.SignedwithDilithium2,
+		PublicKeyAlgorithm:    x509.Dilithium2,
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
+		CRLDistributionPoints: CRLDistributionPoint,
+		DNSNames:              DNSNames,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+	}
+	return createNewCertificate(rootCer, template, publicKey, pk, p)
+}
+
 // 生成代码签名证书
 func CreateCodeSignCert(rootCer *x509.Certificate, serialN *big.Int, subject pkix.Name,
 	publicKey string, pk *rsa.PrivateKey, notBefore, notAfter time.Time,
@@ -57,8 +78,8 @@ func createNewCertificate(rootCer, template *x509.Certificate,
 		ExceptionLog(err, "Failed to create certificate")
 		return false
 	}
-	fileObj3, _ := os.OpenFile("./pubkey.pem", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	fmt.Fprintf(fileObj3, "%s", c)
+	/* fileObj3, _ := os.OpenFile("./pubkey.pem", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	fmt.Fprintf(fileObj3, "%s", c) */
 	//创建接收base64DER格式的文件
 	certOut, err := os.Create(p)
 	if err != nil {

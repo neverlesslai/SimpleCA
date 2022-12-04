@@ -68,6 +68,7 @@ func caRevokeRoutes() []gin.HandlerFunc {
 	}
 }
 
+//上传CSR文件
 func caCSRFileRoutes() []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		middlewareTools.Auth(middleware.TokenAuth),

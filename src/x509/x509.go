@@ -152,13 +152,14 @@ type tbsCertificate struct {
 	Version            int `asn1:"optional,explicit,default:0,tag:0"`
 	SerialNumber       *big.Int
 	SignatureAlgorithm pkix.AlgorithmIdentifier
-	Issuer             asn1.RawValue
-	Validity           validity
-	Subject            asn1.RawValue
-	PublicKey          publicKeyInfo
-	UniqueId           asn1.BitString   `asn1:"optional,tag:1"`
-	SubjectUniqueId    asn1.BitString   `asn1:"optional,tag:2"`
-	Extensions         []pkix.Extension `asn1:"optional,explicit,tag:3"`
+	//SignatureAlgorithm string
+	Issuer          asn1.RawValue
+	Validity        validity
+	Subject         asn1.RawValue
+	PublicKey       publicKeyInfo
+	UniqueId        asn1.BitString   `asn1:"optional,tag:1"`
+	SubjectUniqueId asn1.BitString   `asn1:"optional,tag:2"`
+	Extensions      []pkix.Extension `asn1:"optional,explicit,tag:3"`
 }
 
 type dsaAlgorithmParameters struct {
@@ -328,7 +329,7 @@ var (
 	// but it's specified by ISO. Microsoft's makecert.exe has been known
 	// to produce certificates with this OID.
 	oidISOSignatureSHA1WithRSA = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 29}
-	oidSignatureDilithium2     = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 2}
+	oidSignatureDilithium2     = asn1.ObjectIdentifier{1, 2, 840, 11676, 1, 1, 2}
 )
 
 var signatureAlgorithmDetails = []struct {
@@ -457,7 +458,7 @@ var (
 	oidPublicKeyDSA        = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
 	oidPublicKeyECDSA      = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
 	oidPublicKeyEd25519    = oidSignatureEd25519
-	oidPublicKeyDilithium2 = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+	oidPublicKeyDilithium2 = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 2}
 )
 
 func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm {
@@ -1560,9 +1561,10 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 		SerialNumber: template.SerialNumber,
 		//修改一
 		SignatureAlgorithm: signatureAlgorithm,
-		Issuer:             asn1.RawValue{FullBytes: asn1Issuer},
-		Validity:           validity{template.NotBefore.UTC(), template.NotAfter.UTC()},
-		Subject:            asn1.RawValue{FullBytes: asn1Subject},
+		//SignatureAlgorithm: "Dilithium2",
+		Issuer:   asn1.RawValue{FullBytes: asn1Issuer},
+		Validity: validity{template.NotBefore.UTC(), template.NotAfter.UTC()},
+		Subject:  asn1.RawValue{FullBytes: asn1Subject},
 		//修改二
 		PublicKey:  publicKeyInfo{nil, publicKeyAlgorithm, encodedPublicKey},
 		Extensions: extensions,
@@ -1595,7 +1597,7 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 		return nil, err
 	} */
 	//PQC签名---------------------------------------------------------------
-	sigName := "Dilithium5"
+	sigName := "Dilithium2"
 	signer := oqs.Signature{}
 	defer signer.Clean() // clean up even in case of panic
 	if err := signer.Init(sigName, nil); err != nil {
@@ -1628,7 +1630,7 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 	case MD5WithRSA:
 		// 如果签名算法仅支持签名，不支持验证，我们将跳过检查。
 	default:
-		if err := checkSignature(sigAlg, c.Raw, signature, key.Public(), true); err != nil {
+		if err := checkSignature(sigAlg, c.Raw, signature, pub, true); err != nil {
 			return nil, fmt.Errorf("x509: signature over certificate returned by signer is invalid: %w", err)
 		}
 	} */
