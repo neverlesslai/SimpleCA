@@ -1,0 +1,12 @@
+package test
+publicKeyBytes, err = asn1.Marshal(pkcs1PublicKey{
+	N: pub.N,
+	E: pub.E,
+})
+if err != nil {
+	return nil, pkix.AlgorithmIdentifier{}, err
+}
+publicKeyAlgorithm.Algorithm = oidPublicKeyRSA
+// This is a NULL parameters value which is required by
+// RFC 3279, Section 2.3.1.
+publicKeyAlgorithm.Parameters = asn1.NullRawValue

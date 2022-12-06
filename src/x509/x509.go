@@ -71,6 +71,7 @@ func ParsePKIXPublicKey(derBytes []byte) (pub any, err error) {
 	return parsePublicKey(algo, &pki)
 }
 
+//pub是类似 *rsa.PublicKey的东西
 func marshalPublicKey(pub any) (publicKeyBytes []byte, publicKeyAlgorithm pkix.AlgorithmIdentifier, err error) {
 	switch pub := pub.(type) {
 	case *rsa.PublicKey:
@@ -1502,17 +1503,23 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 	} */
 	//获取摘要算法和签名算法
 	var signatureAlgorithm = pkix.AlgorithmIdentifier{}
-	signatureAlgorithm.Algorithm = oidSignatureDilithium2
 	signatureAlgorithm.Parameters = asn1.NullRawValue
+	signatureAlgorithm.Algorithm = oidSignatureDilithium2
+	//signatureAlgorithm.Parameters.Bytes = []byte("Dilithium2")
 	/*/hashFunc, signatureAlgorithm, err := signingParamsForPublicKey(key.Public(), template.SignatureAlgorithm)
 	if err != nil {
 		return nil, err
 	} */
 	//获取公钥字节和公钥算法
+	publicKeyAlgorithm := pkix.AlgorithmIdentifier{}
 	//publicKeyBytes, publicKeyAlgorithm, err := marshalPublicKey(pub)
-	var publicKeyBytes = pub
-	var publicKeyAlgorithm = pkix.AlgorithmIdentifier{}
-	publicKeyAlgorithm.Algorithm = oidPublicKeyDilithium2
+	publicKeyBytes := pub
+	publicKeyAlgorithm.Algorithm = oidPublicKeyEd25519
+	//publicKeyBytes, _ := asn1.Marshal(pub)
+	// publicKeyBytes := pub
+	//publicKeyAlgorithm.Algorithm = oidPublicKeyDilithium2
+	//publicKeyAlgorithm.Algorithm = oidPublicKeyRSA
+	//publicKeyAlgorithm.Parameters = asn1.NullRawValue
 	/* if err != nil {
 		return nil, err
 	} */
@@ -1570,6 +1577,8 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 		Extensions: extensions,
 	}
 	//返回一个ASN.1编码后的字符数组
+	//Marshal 返回 val 的 ASN.1 编码。除了Unmarshal识别的结构标签外，以下内容可以是使用：
+
 	tbsCertContents, err := asn1.Marshal(c)
 	if err != nil {
 		return nil, err

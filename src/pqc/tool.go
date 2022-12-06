@@ -1,6 +1,7 @@
 package pqc
 
 import (
+	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/pem"
@@ -78,8 +79,8 @@ func createNewCertificate(rootCer, template *x509.Certificate,
 		ExceptionLog(err, "Failed to create certificate")
 		return false
 	}
-	/* fileObj3, _ := os.OpenFile("./pubkey.pem", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	fmt.Fprintf(fileObj3, "%s", c) */
+	fileObj3, _ := os.OpenFile("./pem/1.pem", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	fmt.Fprintf(fileObj3, "%s", c)
 	//创建接收base64DER格式的文件
 	certOut, err := os.Create(p)
 	if err != nil {
@@ -96,7 +97,7 @@ func createNewCertificate(rootCer, template *x509.Certificate,
 	return true
 }
 
-// 解码 RSA 公钥 pem 文件
+// 解码 RSA 公钥 pem 文件（将base64加密的pem文件转为subjectInfo格式公钥）
 func DecodeRSAPublicKey(input []byte) ([]byte, bool) {
 	//找到 PEM 格式的块（证书、私钥等）。它返回该块和输入的其余部分。如果未找到 PEM 数据，则 p 为零，并且整个输入以静止状态返回。
 	block, _ := pem.Decode(input)
@@ -111,7 +112,8 @@ func DecodeRSAPublicKey(input []byte) ([]byte, bool) {
 			"failed to parse PKIX public key")
 		return nil, false
 	} */
-	pub := block.Bytes
+	pub := ed25519.PublicKey(block.Bytes)
+	//pub := block.Bytes
 	return pub, true
 }
 
