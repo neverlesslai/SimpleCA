@@ -72,6 +72,7 @@ func checkCSRID(CSRID string) (*dao.CARequest, bool) {
 	return csr, true
 }
 
+//RSA证书签名
 func AuditPassLogic(ctx *gin.Context, req ginTools.BaseReqInter) ginTools.BaseRespInter {
 	request := req.(*message.AuditPassReq)
 	resp := message.AuditPassResp{}

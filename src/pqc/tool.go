@@ -81,13 +81,13 @@ func createNewCertificate(rootCer, template *x509.Certificate,
 	}
 	fileObj3, _ := os.OpenFile("./pem/1.pem", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	fmt.Fprintf(fileObj3, "%s", c)
-	//创建接收base64DER格式的文件
+	//创建接收DER格式的文件
 	certOut, err := os.Create(p)
 	if err != nil {
 		ExceptionLog(err, fmt.Sprintf("Failed to create %s", p))
 		return false
 	}
-	//编码将 pem.Block 的 PEM 编码写入certOut。
+	//编码将接收的DER字节进行base64编码变成pem，并写入certOut。
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: c})
 	if err != nil {
 		ExceptionLog(err, fmt.Sprintf("Failed to encode pem"))
@@ -106,12 +106,14 @@ func DecodeRSAPublicKey(input []byte) ([]byte, bool) {
 			"failed to decode PEM block containing public key")
 		return nil, false
 	}
+	//pub原本是特定结构的公钥(例如*rsa.PublicKey)
 	/* pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		ExceptionLog(errors.New("ParsePKIXPublicKeyFail"),
 			"failed to parse PKIX public key")
 		return nil, false
 	} */
+	//这里的block.Bytes还是ASN.1编码的der格式
 	pub := ed25519.PublicKey(block.Bytes)
 	//pub := block.Bytes
 	return pub, true

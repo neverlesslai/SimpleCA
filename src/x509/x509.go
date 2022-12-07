@@ -1505,7 +1505,6 @@ func CreatepqcCertificate(rand io.Reader, template, parent *Certificate, pub []b
 	var signatureAlgorithm = pkix.AlgorithmIdentifier{}
 	signatureAlgorithm.Parameters = asn1.NullRawValue
 	signatureAlgorithm.Algorithm = oidSignatureDilithium2
-	//signatureAlgorithm.Parameters.Bytes = []byte("Dilithium2")
 	/*/hashFunc, signatureAlgorithm, err := signingParamsForPublicKey(key.Public(), template.SignatureAlgorithm)
 	if err != nil {
 		return nil, err
